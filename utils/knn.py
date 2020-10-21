@@ -179,7 +179,7 @@ def build_knns(knn_prefix,
                feats,
                knn_method,
                k,
-               num_process=None,
+               num_process=16,  # default None
                is_rebuild=False,
                feat_create_time=None):
     knn_prefix = os.path.join(knn_prefix, '{}_k_{}'.format(knn_method, k))
@@ -204,6 +204,11 @@ def build_knns(knn_prefix,
                                   omp_num_threads=num_process,
                                   rebuild_index=True)
             elif knn_method == 'faiss_gpu':
+                # index = knn_faiss_my_gpu(feats,
+                #                   k,
+                #                   index_path,
+                #                   omp_num_threads=num_process,
+                #                   rebuild_index=True)
                 index = knn_faiss_gpu(feats,
                                       k,
                                       index_path,
@@ -370,6 +375,70 @@ class knn_faiss(knn):
                               1 - np.array(sim, dtype=np.float32))
                              for nbr, sim in zip(nbrs, sims)]
 
+class knn_faiss_my_gpu(knn):
+    '''
+    作者的faiss_gpu运行会卡在精确距离计算那一块，自己尝试优化作者的faiss_gpu，尝试直接用faiss_gpu依据
+    点积距离搜索k近邻，显存爆了... 
+    ok，fine！现在明白作者搞得IVF哪些鬼东西是干嘛的了，要么是优化内存占用要么优化计算速度
+    fiass是个很强的k近邻搜索库
+    '''
+    def __init__(self,
+                 feats,
+                 k,
+                 index_path='',
+                 index_key='',
+                 nprobe=128,
+                 omp_num_threads=None,
+                 rebuild_index=True,
+                 verbose=True,
+                 **kwargs):
+        import faiss
+        if omp_num_threads is not None:
+            faiss.omp_set_num_threads(omp_num_threads)
+        self.verbose = verbose
+        with Timer('[my faiss gpu] build index', verbose):
+            if index_path != '' and not rebuild_index and os.path.exists(
+                    index_path):
+                print('[my faiss gpu] read index from {}'.format(index_path))
+                index = faiss.read_index(index_path)
+            else:
+                feats = feats.astype('float32')
+                size, dim = feats.shape
+                res = faiss.StandardGpuResources()
+                index = faiss.GpuIndexFlatIP(res,dim)
+                if index_key != '':
+                    assert index_key.find(
+                        'HNSW') < 0, 'HNSW returns distances insted of sims'
+                    metric = faiss.METRIC_INNER_PRODUCT
+                    nlist = min(4096, 8 * round(math.sqrt(size)))
+                    if index_key == 'IVF':
+                        quantizer = index
+                        index = faiss.IndexIVFFlat(quantizer, dim, nlist,
+                                                   metric)
+                    else:
+                        index = faiss.index_factory(dim, index_key, metric)
+                    if index_key.find('Flat') < 0:
+                        assert not index.is_trained
+                    index.train(feats)
+                    index.nprobe = min(nprobe, nlist)
+                    assert index.is_trained
+                    print('nlist: {}, nprobe: {}'.format(nlist, nprobe))
+                index.add(feats)
+                if index_path != '':
+                    print('[my faiss gpu] save index to {}'.format(index_path))
+                    mkdir_if_no_exists(index_path)
+                    index_cpu = faiss.index_gpu_to_cpu(index) 
+                    faiss.write_index(index_cpu, index_path)
+        with Timer('[my faiss gpu] query topk {}'.format(k), verbose):
+            knn_ofn = index_path + '.npz'
+            if os.path.exists(knn_ofn):
+                print('[my faiss gpu] read knns from {}'.format(knn_ofn))
+                self.knns = np.load(knn_ofn)['data']
+            else:
+                sims, nbrs = index.search(feats, k=k)
+                self.knns = [(np.array(nbr, dtype=np.int32),
+                              1 - np.array(sim, dtype=np.float32))
+                             for nbr, sim in zip(nbrs, sims)]
 
 class knn_faiss_gpu(knn):
     def __init__(self,
@@ -424,3 +493,4 @@ if __name__ == '__main__':
     print(index3.knns[0])
     print(index4.knns[0])
     print(index5.knns[0])
+

@@ -1,5 +1,5 @@
 prefix=./data
-name=part1_test
+name=renren_resnet50
 
 oprefix=$prefix/baseline_results
 gt_labels=$prefix/labels/$name.meta
@@ -30,14 +30,14 @@ python tools/baseline_cluster.py \
     --num_process $num_process
 
 # eval
-metric=pairwise
-python evaluation/evaluate.py \
-    --metric $metric \
-    --gt_labels $gt_labels \
-    --pred_labels $pred_labels
+# metric=pairwise
+# python evaluation/evaluate.py \
+#     --metric $metric \
+#     --gt_labels $gt_labels \
+#     --pred_labels $pred_labels
 
-metric=bcubed
-python evaluation/evaluate.py \
-    --metric $metric \
-    --gt_labels $gt_labels \
-    --pred_labels $pred_labels
+# metric=bcubed
+# python evaluation/evaluate.py \
+#     --metric $metric \
+#     --gt_labels $gt_labels \
+#     --pred_labels $pred_labels

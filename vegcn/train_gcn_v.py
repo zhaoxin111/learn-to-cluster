@@ -6,7 +6,7 @@ import torch
 from vegcn.runner import Runner
 from dsgcn.train import build_optimizer
 from vegcn.datasets import build_dataset
-from utils import sparse_mx_to_torch_sparse_tensor
+from utils import sparse_mx_to_torch_sparse_tensor, create_logger
 
 
 def batch_processor(model, data, train_mode):
@@ -41,8 +41,9 @@ def _single_train(model, dataset, cfg):
 
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
+    logger = create_logger()
     runner = Runner(model, batch_processor, optimizer, cfg.work_dir,
-                    cfg.log_level)
+                    logger=logger)
     runner.register_training_hooks(cfg.lr_config, cfg.optimizer_config,
                                    cfg.checkpoint_config, cfg.log_config)
 

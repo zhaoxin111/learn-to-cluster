@@ -26,6 +26,8 @@ def test(model, dataset, cfg, logger):
     adj = sparse_mx_to_torch_sparse_tensor(dataset.adj)
     if not dataset.ignore_label:
         labels = torch.FloatTensor(dataset.labels)
+    else:
+        labels = torch.ones((len(features,)))
 
     if cfg.cuda:
         model.cuda()
@@ -72,6 +74,7 @@ def test_gcn_v(model, cfg, logger):
 
     logger.info('Convert to cluster')
     with Timer('Predition to peaks'):
+        # pred_dist2peak: the dist between node and peak {node index:dist}; pred_peaks: {node index:peak index}
         pred_dist2peak, pred_peaks = confidence_to_peaks(
             dataset.dists, dataset.nbrs, pred_confs, cfg.max_conn)
 

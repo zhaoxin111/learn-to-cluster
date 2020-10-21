@@ -1,7 +1,7 @@
 prefix=./data
 dim=256
 
-name=deepfashion_test
+name=renren_resnet50
 bw=0.5
 bin=1
 
@@ -26,10 +26,10 @@ python tools/baseline_cluster.py \
     --force
 
 # eval
-for metric in pairwise bcubed nmi
-do
-    python evaluation/evaluate.py \
-        --metric $metric \
-        --gt_labels $gt_labels \
-        --pred_labels $pred_labels
-done
+# for metric in pairwise bcubed nmi
+# do
+#     python evaluation/evaluate.py \
+#         --metric $metric \
+#         --gt_labels $gt_labels \
+#         --pred_labels $pred_labels
+# done

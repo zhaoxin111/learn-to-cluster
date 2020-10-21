@@ -31,7 +31,8 @@ metrics = ['pairwise', 'bcubed', 'nmi']
 
 # data locations
 prefix = './data'
-test_name = 'part1_test'
+# test_name = 'part1_test'
+test_name = 'renren_resnet50'
 k = 80
 knn_method = 'hnsw'
 
@@ -68,7 +69,8 @@ proposal_params = [
 ]
 
 feat_path = osp.join(prefix, 'features', '{}.bin'.format(test_name))
-label_path = osp.join(prefix, 'labels', '{}.meta'.format(test_name))
+# label_path = osp.join(prefix, 'labels', '{}.meta'.format(test_name))
+label_path = None
 proposal_path = osp.join(prefix, 'cluster_proposals')
 test_data = dict(wo_weight=True,
                  feat_path=feat_path,

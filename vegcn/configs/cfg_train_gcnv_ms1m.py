@@ -2,8 +2,8 @@ import os.path as osp
 
 # data locations
 prefix = './data'
-train_name = 'part0_train'
-test_name = 'part1_test'
+train_name = 'ms1m_58W'
+test_name = 'renren_50W'
 knn = 80
 knn_method = 'faiss'
 th_sim = 0.  # cut edges with similarity smaller than th_sim

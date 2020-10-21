@@ -13,7 +13,7 @@ class MeanAggregator(nn.Module):
 
     def forward(self, features, A):
         if features.dim() == 2:
-            x = torch.spmm(A, features)
+            x = torch.spmm(A, features)  # 稀疏矩阵相乘，传进来的邻接矩阵A已经加了单位矩阵并做了归一化
         elif features.dim() == 3:
             x = torch.bmm(A, features)
         else:
@@ -22,6 +22,11 @@ class MeanAggregator(nn.Module):
 
 
 class GraphConv(nn.Module):
+    '''
+    图卷积计算层，主要完成邻接矩阵adj和特征举证features的矩阵计算
+    adj需先加单位矩阵然后归一化预处理
+    该层的输出即为adj.dot(features)
+    '''
     def __init__(self, in_dim, out_dim, agg, dropout=0):
         super(GraphConv, self).__init__()
         self.in_dim = in_dim
@@ -44,8 +49,16 @@ class GraphConv(nn.Module):
             op = 'bnd,df->bnf'
         else:
             raise RuntimeError('the dimension of features should be 2 or 3')
-        out = torch.einsum(op, (cat_feats, self.weight))
+        out = torch.einsum(op, (cat_feats, self.weight))   # 爱因斯坦求和约定，这儿就是实现矩阵相乘
         out = F.relu(out + self.bias)
         if self.dropout > 0:
             out = F.dropout(out, self.dropout, training=self.training)
         return out
+
+
+if __name__ == "__main__":
+    features = torch.arange(20,dtype=torch.float32).reshape(4,5)
+    adj = torch.eye(4,dtype=torch.float32)
+    conv = GraphConv(5,10,MeanAggregator,0)
+    out = conv(features,adj)
+    print(out.shape)

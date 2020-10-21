@@ -4,7 +4,7 @@ from utils import rm_suffix
 
 # data locations
 prefix = './data'
-test_name = 'part1_test'
+test_name = 'test_cluster_data_features_res100'
 knn = 160
 knn_method = 'faiss'
 th_sim = 0.  # cut edges with similarity smaller than th_sim
@@ -30,7 +30,7 @@ else:
 
 # testing args
 max_conn = 1
-tau = 0.8
+tau = 0.7  # default 0.8
 
 metrics = ['pairwise', 'bcubed', 'nmi']
 

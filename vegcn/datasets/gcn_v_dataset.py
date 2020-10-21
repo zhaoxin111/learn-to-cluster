@@ -22,6 +22,7 @@ class GCNVDataset(object):
         self.th_sim = cfg.get('th_sim', 0.)
         self.max_conn = cfg.get('max_conn', 1)
         self.conf_metric = cfg.get('conf_metric')
+        self.num_process = cfg.get('num_process',16)
 
         with Timer('read meta and feature'):
             if label_path is not None:
@@ -42,15 +43,17 @@ class GCNVDataset(object):
 
         with Timer('read knn graph'):
             if os.path.isfile(knn_graph_path):
-                knns = np.load(knn_graph_path)['data']
+                knns = np.load(knn_graph_path)['data']    # num_imgs*2*k
             else:
                 if knn_graph_path is not None:
                     print('knn_graph_path does not exist: {}'.format(
                         knn_graph_path))
                 knn_prefix = os.path.join(cfg.prefix, 'knns', cfg.name)
+                # 通过faiss实现k近邻搜索，此处作者faiss_gpu版本实现可能有问题，但faiss大规模在cpu上跑还是慢
+                # 当然faiss有针内存和计算速度方面的优化，PQ,IVF等，可参考faiss
                 knns = build_knns(knn_prefix, self.features, cfg.knn_method,
-                                  cfg.knn)
-
+                                  cfg.knn,self.num_process)
+            # 依据k近邻搜索结果构建邻接矩阵
             adj = fast_knns2spmat(knns, self.k, self.th_sim, use_sim=True)
 
             # build symmetric adjacency matrix
@@ -63,7 +66,7 @@ class GCNVDataset(object):
                 self.adj = adj
 
             # convert knns to (dists, nbrs)
-            self.dists, self.nbrs = knns2ordered_nbrs(knns)
+            self.dists, self.nbrs = knns2ordered_nbrs(knns)  # num_imgs*k
 
         print('feature shape: {}, k: {}, norm_feat: {}'.format(
             self.features.shape, self.k, self.is_norm_feat))
@@ -84,6 +87,10 @@ class GCNVDataset(object):
         ''' return the entire graph for training.
         To accelerate training or cope with larger graph,
         we can sample sub-graphs in this function.
+
+        作者实际train/test中并未用到该函数
+        features: num_img*feature_dim
+        adj_indices: 
         '''
 
         assert index == 0

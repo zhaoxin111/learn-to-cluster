@@ -1,7 +1,7 @@
 cfg_name=cfg_train_gcnv_ms1m
 config=vegcn/configs/$cfg_name.py
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=4
 export PYTHONPATH=.
 
 # train

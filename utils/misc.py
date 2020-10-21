@@ -278,3 +278,7 @@ def create_temp_file_if_exist(path, suffix=''):
             i += 1
             if not os.path.exists(temp_path):
                 return temp_path
+
+def check_folder_exist(folfer):
+    if not os.path.exists(folfer):
+        os.makedirs(folfer)

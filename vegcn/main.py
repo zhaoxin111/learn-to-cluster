@@ -43,6 +43,13 @@ def parse_args():
 
 
 def main():
+    '''
+    解析传数
+    获取配置参数
+    通过解析传数更新配置参数
+    依据模型参数以及训练配置构建模型与训练函数
+    训练模型
+    '''
     args = parse_args()
     cfg = Config.fromfile(args.config)
 

@@ -2,16 +2,19 @@ import os.path as osp
 
 # data locations
 prefix = './data'
-test_name = 'part1_test'
-knn = 80
-knn_method = 'faiss'
+test_name = 'renren_50W'
+# test_name = 'test_cluster_data_features_res100'
+knn = 80  # default 80
+knn_method = 'faiss' # default faiss
 th_sim = 0.  # cut edges with similarity smaller than th_sim
+num_process = 64
 
 # if `knn_graph_path` is not passed, it will build knn_graph automatically
 test_data = dict(feat_path=osp.join(prefix, 'features',
                                     '{}.bin'.format(test_name)),
                  label_path=osp.join(prefix, 'labels',
                                      '{}.meta'.format(test_name)),
+                #  label_path = None,
                  knn_graph_path=osp.join(prefix, 'knns', test_name,
                                          '{}_k_{}.npz'.format(knn_method,
                                                               knn)),
@@ -29,8 +32,8 @@ batch_size_per_gpu = 16
 # testing args
 use_gcn_feat = True
 max_conn = 1
-tau_0 = 0.65
-tau = 0.8
+tau_0 = 0.7   # default 0.65
+tau = 0.85      # default 0.8
 
 metrics = ['pairwise', 'bcubed', 'nmi']
 
